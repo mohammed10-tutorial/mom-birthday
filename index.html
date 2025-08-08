@@ -2,7 +2,7 @@
 <html lang="en" >
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>Mom's Birthday - Stage 1 Countdown</title>
   <style>
     * {
@@ -533,7 +533,7 @@
   const fireworkCount = 5;
   for(let i=0; i<fireworkCount; i++) {
     const x = (width / (fireworkCount + 1)) * (i + 1) + (Math.random()*40-20);
-    const y = height - 15 - Math.random()*20;
+    const y = height - 60 - Math.random()*20;
     const size = 12 + Math.random()*7;
     fireworks.push(new FireworkRocket(x, y, size));
   }
@@ -605,14 +605,7 @@
   });
 
 })();
-  if (/Mobi|Android/i.test(navigator.userAgent)) {
-  document.body.style.transform = "scale(0.9)";
-  document.body.style.transformOrigin = "top left";
-  document.body.style.width = "111.11%"; // 1/0.9 = 111.11%
-  document.body.style.height = "111.11%";
-}
 </script>
 
 </body>
 </html>
-
