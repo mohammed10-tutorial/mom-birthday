@@ -2,7 +2,7 @@
 <html lang="en" >
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9, user-scalable=no" />
   <title>Mom's Birthday - Stage 1 Countdown</title>
   <style>
     * {
@@ -605,7 +605,14 @@
   });
 
 })();
+  if (/Mobi|Android/i.test(navigator.userAgent)) {
+  document.body.style.transform = "scale(0.9)";
+  document.body.style.transformOrigin = "top left";
+  document.body.style.width = "111.11%"; // 1/0.9 = 111.11%
+  document.body.style.height = "111.11%";
+}
 </script>
 
 </body>
 </html>
+
