@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Mom's Birthday - Stage 1 Countdown</title>
+  <style>
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+    }
+    html, body {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(180deg, #0b1120 0%, #02040a 85%);
+      color: #f5f5f5;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Countdown container */
+    #countdown {
+      display: flex;
+      gap: 0.6rem;
+      user-select: text;
+      z-index: 10;
+      max-width: 95vw;
+      flex-wrap: nowrap;
+      justify-content: center;
+    }
+    /* Each time segment container */
+    .time-segment {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-weight: 700;
+      color: #fff;
+      font-family: 'Courier New', Courier, monospace;
+      flex-shrink: 0;
+    }
+    /* Digit boxes container */
+    .digits {
+      display: flex;
+      gap: 0.25rem;
+      background: #111820;
+      padding: 0.3rem 0.4rem;
+      border-radius: 0.3rem;
+      box-shadow: inset 0 0 4px #000;
+    }
+    /* Each digit box */
+    .digit-box {
+      width: 2rem;
+      height: 2.7rem;
+      background: #222d3a;
+      border-radius: 0.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: 0.1rem;
+      color: #f9d976; /* warm golden */
+      font-family: 'DS-Digital', 'Courier New', monospace;
+      box-shadow:
+        0 0 6px #f9d97644,
+        inset 0 0 6px #f9d97688;
+      user-select: none;
+    }
+    /* Colon separators */
+    .colon {
+      font-size: 2.4rem;
+      font-weight: 900;
+      color: #f9d976;
+      user-select: none;
+      padding: 0 0.25rem;
+      align-self: center;
+    }
+    /* Labels under segments */
+    .label {
+      margin-top: 0.2rem;
+      font-size: 0.85rem;
+      color: #b8a47e;
+      user-select: none;
+      letter-spacing: 0.05rem;
+    }
+    /* Subtitle for instructions or info */
+    #subtitle {
+      margin-top: 0.8rem;
+      font-size: 1.1rem;
+      color: #c0b68a;
+      user-select: none;
+      font-style: italic;
+      letter-spacing: 0.1rem;
+      z-index: 10;
+      text-align: center;
+      max-width: 90vw;
+    }
+
+    /* Fullscreen canvases with pointer events set */
+    #fireworksCanvas {
+      pointer-events: auto;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 10;
+      touch-action: manipulation;
+    }
+    #balloonsCanvas {
+      pointer-events: auto;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 5;
+      touch-action: manipulation;
+    }
+    /* Invisible button top-left for Stage 2 jump */
+    #hiddenBtn {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      z-index: 20;
+      background: transparent;
+    }
+
+    /* Digital font fallback */
+    @font-face {
+      font-family: 'DS-Digital';
+      src: local('DS-Digital'), url('https://fonts.cdnfonts.com/s/12407/DS-DIGIT.woff') format('woff');
+      font-weight: normal;
+      font-style: normal;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="countdown" aria-live="polite" aria-atomic="true" role="timer" aria-label="Countdown to mom's birthday">
+    <div class="time-segment" aria-label="Days">
+      <div class="digits">
+        <div class="digit-box" id="day1">0</div>
+        <div class="digit-box" id="day2">0</div>
+      </div>
+      <div class="label">Days</div>
+    </div>
+    <div class="colon" aria-hidden="true">:</div>
+    <div class="time-segment" aria-label="Hours">
+      <div class="digits">
+        <div class="digit-box" id="hour1">0</div>
+        <div class="digit-box" id="hour2">0</div>
+      </div>
+      <div class="label">Hours</div>
+    </div>
+    <div class="colon" aria-hidden="true">:</div>
+    <div class="time-segment" aria-label="Minutes">
+      <div class="digits">
+        <div class="digit-box" id="min1">0</div>
+        <div class="digit-box" id="min2">0</div>
+      </div>
+      <div class="label">Minutes</div>
+    </div>
+    <div class="colon" aria-hidden="true">:</div>
+    <div class="time-segment" aria-label="Seconds">
+      <div class="digits">
+        <div class="digit-box" id="sec1">0</div>
+        <div class="digit-box" id="sec2">0</div>
+      </div>
+      <div class="label">Seconds</div>
+    </div>
+  </div>
+
+  <div id="subtitle">Counting down to mom's special day</div>
+
+  <canvas id="balloonsCanvas" aria-label="Interactive balloons"></canvas>
+  <canvas id="fireworksCanvas" aria-label="Fireworks animations"></canvas>
+
+  <div id="hiddenBtn" title="Go to Stage 2 (for you only)"></div>
+
+<script>
+(() => {
+  // ====== Sounds (put these mp3 files next to this file) ======
+  const balloonPopSound = new Audio('balloon-pop.mp3');
+  const fireworkLaunchSound = new Audio('firework-launch.mp3');
+  const fireworkExplodeSound = new Audio('firework-explode.mp3');
+
+  // ====== Setup canvases ======
+  const balloonsCanvas = document.getElementById('balloonsCanvas');
+  const fireworksCanvas = document.getElementById('fireworksCanvas');
+  const balloonsCtx = balloonsCanvas.getContext('2d');
+  const fireworksCtx = fireworksCanvas.getContext('2d');
+
+  let width, height;
+  function resize() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    balloonsCanvas.width = width;
+    balloonsCanvas.height = height;
+    fireworksCanvas.width = width;
+    fireworksCanvas.height = height;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // ====== Countdown ======
+  const targetDate = new Date('2025-08-20T00:00:00');
+
+  const digits = {
+    day1: document.getElementById('day1'),
+    day2: document.getElementById('day2'),
+    hour1: document.getElementById('hour1'),
+    hour2: document.getElementById('hour2'),
+    min1: document.getElementById('min1'),
+    min2: document.getElementById('min2'),
+    sec1: document.getElementById('sec1'),
+    sec2: document.getElementById('sec2'),
+  };
+
+  function setTwoDigits(id1, id2, number) {
+    const str = number.toString().padStart(2, '0');
+    digits[id1].textContent = str[0];
+    digits[id2].textContent = str[1];
+  }
+
+  let fireworksLaunchedOnZero = false;
+
+  function triggerAllFireworks() {
+    if (fireworksLaunchedOnZero) return;
+    fireworksLaunchedOnZero = true;
+    if(currentFirework) currentFirework = null; // clear any active firework
+
+    fireworks.forEach(fw => {
+      if (fw.state === 'ready') {
+        fw.state = 'launch';
+        fw.y = fw.groundY;
+        fireworkLaunchSound.currentTime = 0;
+        fireworkLaunchSound.play().catch(() => {});
+      }
+    });
+
+    // Check when all fireworks done exploding
+    const checkDone = setInterval(() => {
+      const anyActive = fireworks.some(fw => fw.state !== 'ready');
+      if (!anyActive) {
+        clearInterval(checkDone);
+        setTimeout(() => {
+          window.location.href = 'index2.html';
+        }, 1200);
+      }
+    }, 300);
+  }
+
+  function updateCountdown() {
+    const now = new Date();
+    const diff = targetDate - now;
+    if (diff <= 0) {
+      for (const key in digits) digits[key].textContent = '-';
+      document.getElementById('subtitle').textContent = "Happy Birthday Mom! 🎉";
+
+      triggerAllFireworks();
+
+      clearInterval(countdownInterval);
+      return;
+    }
+    const days = Math.floor(diff / (1000*60*60*24));
+    const hours = Math.floor((diff / (1000*60*60)) % 24);
+    const minutes = Math.floor((diff / (1000*60)) % 60);
+    const seconds = Math.floor((diff / 1000) % 60);
+
+    setTwoDigits('day1', 'day2', days);
+    setTwoDigits('hour1', 'hour2', hours);
+    setTwoDigits('min1', 'min2', minutes);
+    setTwoDigits('sec1', 'sec2', seconds);
+  }
+  updateCountdown();
+  const countdownInterval = setInterval(updateCountdown, 1000);
+
+  // ====== Balloon class ======
+  class Balloon {
+    constructor() {
+      this.reset();
+    }
+    reset() {
+      this.x = Math.random() * width;
+      this.y = height - (Math.random() * 150) - 40;
+      this.size = 18 + Math.random() * 16; // a bit smaller on mobiles
+      this.speed = 0.3 + Math.random() * 0.5;
+      // warm elegant colors only
+      const warmColors = [
+        'hsl(10, 70%, 65%)', // soft red
+        'hsl(30, 80%, 70%)', // warm orange
+        'hsl(40, 80%, 75%)', // golden yellow
+        'hsl(15, 70%, 60%)', // red-orange
+        'hsl(350, 60%, 65%)', // soft pink
+        'hsl(25, 60%, 65%)', // peach
+      ];
+      this.color = warmColors[Math.floor(Math.random() * warmColors.length)];
+      this.popped = false;
+      this.popFrame = 0;
+      this.floatingStopped = false;
+      this.ceilingY = 70 + Math.random() * 40;
+    }
+    draw(ctx) {
+      if (this.popped) {
+        if (this.popFrame < 12) {
+          ctx.save();
+          ctx.translate(this.x, this.y);
+          const scale = 1 - this.popFrame / 12;
+          ctx.scale(scale, scale);
+          ctx.fillStyle = `rgba(255, 100, 100, ${1 - this.popFrame / 12})`;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, this.size * 0.6, this.size, 0, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.restore();
+          this.popFrame++;
+        }
+      } else {
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.ellipse(this.x, this.y, this.size * 0.6, this.size, 0, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y + this.size);
+        ctx.lineTo(this.x - this.size * 0.15, this.y + this.size + 8);
+        ctx.lineTo(this.x + this.size * 0.15, this.y + this.size + 8);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = '#ccc';
+        ctx.lineWidth = 1.3;
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y + this.size + 8);
+        ctx.lineTo(this.x, this.y + this.size + 50);
+        ctx.stroke();
+      }
+    }
+    update() {
+      if (!this.popped && !this.floatingStopped) {
+        this.y -= this.speed;
+        if (this.y <= this.ceilingY) {
+          this.floatingStopped = true;
+        }
+      }
+    }
+    isPointInside(px, py) {
+      // simple ellipse hit test
+      const dx = px - this.x;
+      const dy = py - this.y;
+      const rx = this.size * 0.6;
+      const ry = this.size;
+      return ((dx * dx) / (rx * rx) + (dy * dy) / (ry * ry)) <= 1;
+    }
+    pop() {
+      if (!this.popped) {
+        this.popped = true;
+        balloonPopSound.currentTime = 0;
+        balloonPopSound.play().catch(() => {});
+        setTimeout(() => this.reset(), 2000);
+      }
+    }
+  }
+
+  // ====== FireworkRocket class ======
+  class FireworkRocket {
+    constructor(x, groundY, size) {
+      this.groundX = x;
+      this.groundY = groundY;
+      this.x = x;
+      this.y = groundY;
+      this.size = size;
+      this.state = 'ready'; // ready, launch, explode
+      this.speed = 4 + Math.random() * 2;
+      this.targetY = 50 + Math.random() * 80;
+      this.colorHue = 30 + Math.random() * 50; // warm colors yellow to orange
+      this.particles = [];
+    }
+
+    draw(ctx) {
+      if (this.state === 'ready') {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        ctx.fillStyle = `hsl(${this.colorHue}, 70%, 60%)`;
+        ctx.shadowColor = `hsl(${this.colorHue}, 100%, 80%)`;
+        ctx.shadowBlur = 10;
+
+        ctx.beginPath();
+        ctx.moveTo(0, -this.size * 1.8);
+        ctx.lineTo(this.size * 0.4, 0);
+        ctx.lineTo(-this.size * 0.4, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(0, -this.size * 2.2);
+        ctx.lineTo(this.size * 0.2, -this.size * 1.8);
+        ctx.lineTo(-this.size * 0.2, -this.size * 1.8);
+        ctx.closePath();
+        ctx.fillStyle = `hsl(${this.colorHue}, 90%, 80%)`;
+        ctx.fill();
+
+        ctx.fillStyle = `hsl(${this.colorHue}, 80%, 50%)`;
+        ctx.fillRect(-this.size * 0.1, -this.size * 1.8, this.size * 0.2, this.size * 1.3);
+
+        ctx.restore();
+      } else if (this.state === 'launch') {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        ctx.fillStyle = `hsl(${this.colorHue}, 70%, 60%)`;
+        ctx.shadowColor = `hsl(${this.colorHue}, 100%, 90%)`;
+        ctx.shadowBlur = 20;
+
+        ctx.beginPath();
+        ctx.moveTo(0, -this.size * 1.8);
+        ctx.lineTo(this.size * 0.4, 0);
+        ctx.lineTo(-this.size * 0.4, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(0, -this.size * 2.2);
+        ctx.lineTo(this.size * 0.2, -this.size * 1.8);
+        ctx.lineTo(-this.size * 0.2, -this.size * 1.8);
+        ctx.closePath();
+        ctx.fillStyle = `hsl(${this.colorHue}, 90%, 80%)`;
+        ctx.fill();
+
+        ctx.fillStyle = `hsl(${this.colorHue}, 80%, 50%)`;
+        ctx.fillRect(-this.size * 0.1, -this.size * 1.8, this.size * 0.2, this.size * 1.3);
+
+        ctx.restore();
+      } else if (this.state === 'explode') {
+        this.particles.forEach(p => p.draw(ctx));
+      }
+      // Do NOT draw anything if state is 'done'
+    }
+
+    update() {
+      if (this.state === 'launch') {
+        this.y -= this.speed;
+        if (this.y <= this.targetY) {
+          this.state = 'explode';
+          this.createParticles();
+          fireworkExplodeSound.currentTime = 0;
+          fireworkExplodeSound.play().catch(() => {});
+          this.popBalloons();
+        }
+      } else if (this.state === 'explode') {
+        this.particles.forEach(p => p.update());
+        this.particles = this.particles.filter(p => !p.isDead);
+        if (this.particles.length === 0) {
+          this.reset(); // Immediate reset to avoid lingering rocket
+        }
+      }
+    }
+
+    createParticles() {
+      this.particles = [];
+      const count = 40 + Math.floor(Math.random() * 20);
+      for (let i = 0; i < count; i++) {
+        this.particles.push(new Particle(this.x, this.y, this.colorHue));
+      }
+    }
+
+    reset() {
+      this.x = this.groundX;
+      this.y = this.groundY;
+      this.state = 'ready';
+      this.particles = [];
+    }
+
+    popBalloons() {
+      balloons.forEach(balloon => {
+        const dx = balloon.x - this.x;
+        const dy = balloon.y - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 100 && !balloon.popped) {
+          balloon.pop();
+        }
+      });
+    }
+  }
+
+  // ====== Particle class ======
+  class Particle {
+    constructor(x, y, hue) {
+      this.x = x;
+      this.y = y;
+      this.size = 2 + Math.random() * 2;
+      this.speedX = (Math.random() - 0.5) * 8;
+      this.speedY = (Math.random() - 0.5) * 8;
+      this.gravity = 0.15;
+      this.life = 25 + Math.random() * 15;
+      this.remainingLife = this.life;
+      this.colorHue = hue + (Math.random() * 30 - 15);
+      this.isDead = false;
+    }
+    draw(ctx) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.fillStyle = `hsla(${this.colorHue}, 85%, 60%, ${this.remainingLife / this.life})`;
+      ctx.shadowColor = `hsla(${this.colorHue}, 100%, 80%, ${this.remainingLife / this.life})`;
+      ctx.shadowBlur = 8;
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    update() {
+      this.x += this.speedX;
+      this.y += this.speedY;
+      this.speedY += this.gravity;
+      this.remainingLife--;
+      if (this.remainingLife <= 0) this.isDead = true;
+    }
+  }
+
+  // ====== Setup balloons ======
+  const balloons = [];
+  const balloonsCount = 25;
+  for(let i=0; i<balloonsCount; i++) {
+    balloons.push(new Balloon());
+  }
+
+  // ====== Setup fireworks ======
+  const fireworks = [];
+  const fireworkCount = 5;
+  for(let i=0; i<fireworkCount; i++) {
+    const x = (width / (fireworkCount + 1)) * (i + 1) + (Math.random()*40-20);
+    const y = height - 15 - Math.random()*20;
+    const size = 12 + Math.random()*7;
+    fireworks.push(new FireworkRocket(x, y, size));
+  }
+  let currentFirework = null;
+
+  // ====== Animation loop ======
+  function animate() {
+    balloonsCtx.clearRect(0,0,width,height);
+    fireworksCtx.clearRect(0,0,width,height);
+
+    balloons.forEach(balloon => {
+      balloon.draw(balloonsCtx);
+      balloon.update();
+    });
+
+    fireworks.forEach(fw => {
+      fw.draw(fireworksCtx);
+      fw.update();
+    });
+
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+  // ====== Interaction ======
+
+  // Balloon pop by click/tap
+  balloonsCanvas.addEventListener('pointerdown', e => {
+    const rect = balloonsCanvas.getBoundingClientRect();
+    const px = e.clientX - rect.left;
+    const py = e.clientY - rect.top;
+    balloons.forEach(balloon => {
+      if (!balloon.popped && balloon.isPointInside(px, py)) {
+        balloon.pop();
+      }
+    });
+  });
+
+  // Firework launch on click near base (one active launch at a time)
+  fireworksCanvas.addEventListener('pointerdown', e => {
+    if (fireworksLaunchedOnZero) return;
+    if (currentFirework && currentFirework.state === 'launch') return;
+
+    const rect = fireworksCanvas.getBoundingClientRect();
+    const px = e.clientX - rect.left;
+    const py = e.clientY - rect.top;
+
+    let launched = false;
+    fireworks.forEach(fw => {
+      if (!launched && fw.state === 'ready') {
+        const baseX = fw.groundX;
+        const baseY = fw.groundY;
+        const clickNearBase = (Math.abs(px - baseX) < 50) && (py > baseY - 20);
+        if (clickNearBase) {
+          fw.state = 'launch';
+          fw.y = fw.groundY;
+          currentFirework = fw;
+          fireworkLaunchSound.currentTime = 0;
+          fireworkLaunchSound.play().catch(() => {});
+          launched = true;
+        }
+      }
+    });
+  });
+
+  // Hidden button to jump to stage 2 manually (for you)
+  document.getElementById('hiddenBtn').addEventListener('click', () => {
+    window.location.href = 'index2.html';
+  });
+
+})();
+</script>
+
+</body>
+</html>
