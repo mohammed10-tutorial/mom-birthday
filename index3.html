@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Birthday Stage 3 - Elegant Dark Theme Lanterns</title>
 
 <!-- Google Fonts -->
@@ -110,6 +110,20 @@
     font-style: italic;
   }
 
+  /* --- Responsive Lantern Sizes --- */
+  @media (max-width: 600px) {
+    .lantern {
+      width: 18vw !important;
+      height: 27vw !important;
+    }
+  }
+  @media (min-width: 601px) {
+    .lantern {
+      width: 44px !important;
+      height: 66px !important;
+    }
+  }
+
   /* --- Question and Reply Boxes (Dark Professional) --- */
   #questionBox, #replyBox {
     position: absolute;
@@ -127,8 +141,6 @@
     z-index: 30;
     display: none;
     font-family: 'Poppins', sans-serif;
-    max-width: 90vw;
-    word-wrap: break-word;
   }
 
   #questionBox button, #replyBox button {
@@ -168,50 +180,12 @@
     text-shadow: 0 0 8px #2c3e50;
   }
 
-  /* --- Responsive Lantern Sizes & Boxes --- */
-  @media (max-width: 900px) {
-    .lantern {
-      width: 30px !important;
-      height: 45px !important;
-    }
-    #questionBox, #replyBox {
-      padding: 20px 28px;
-      font-size: 1.4rem;
-      max-width: 85vw;
-    }
-    #questionBox button, #replyBox button {
-      font-size: 1.2rem;
-      padding: 10px 24px;
-      margin: 12px 12px 0 12px;
-    }
-  }
-
+  /* --- Responsive Happy Birthday Banner --- */
   @media (max-width: 600px) {
-    .lantern {
-      width: 24px !important;
-      height: 36px !important;
-    }
-    #photoContainer img {
-      max-width: 260px;
-      max-height: 260px;
-    }
-    #photoContainer h2 {
-      font-size: 2.2rem;
-      margin-top: 12px;
-    }
-    #photoContainer p {
-      font-size: 1.1rem;
-      margin-top: 6px;
-    }
-    #questionBox, #replyBox {
-      padding: 18px 20px;
-      font-size: 1.1rem;
-      max-width: 90vw;
-    }
-    #questionBox button, #replyBox button {
-      font-size: 1rem;
-      padding: 8px 20px;
-      margin: 10px 10px 0 10px;
+    #banner {
+      font-size: 1.6rem;
+      padding: 10px 20px;
+      border-radius: 24px;
     }
   }
 </style>
@@ -416,10 +390,7 @@
       lan.el.style.bottom = `${lan.yPx}px`;
       lan.el.style.left = `${window.innerWidth * (lan.xPercent / 100)}px`;
 
-      // Adjust popping threshold for mobile devices to fix non-popping
-      const popThreshold = window.innerHeight * 0.82;
-
-      if (!lan.popTimeout && lan.yPx >= popThreshold) {
+      if (!lan.popTimeout && lan.yPx >= window.innerHeight * 0.85) {
         lan.popTimeout = setTimeout(() => popLantern(lan), 400);
       }
     });
