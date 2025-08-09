@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mom's Birthday Matching Game - Stage 2</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+    body, html {
+      margin: 0; padding: 0; height: 100%;
+      background: radial-gradient(circle at top left, #1b1b2f, #0a0a12);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 20px 0 60px;
+      min-height: 100vh;
+      position: relative;
+    }
+    #background {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+      background: radial-gradient(circle at top left, #1b1b2f, #0a0a12);
+    }
+    #stars {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .balloon {
+      position: absolute;
+      width: 40px; height: 60px;
+      background: radial-gradient(circle at 20% 20%, #ff6b81, #c82333);
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      animation: floatUp linear infinite;
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+    }
+    .balloon:nth-child(2n) {
+      background: radial-gradient(circle at 20% 20%, #ffd93b, #f7b500);
+      width: 35px; height: 55px;
+      animation-duration: 14s;
+    }
+    .balloon:nth-child(3n) {
+      background: radial-gradient(circle at 20% 20%, #6bc1ff, #004d7a);
+      width: 45px; height: 65px;
+      animation-duration: 18s;
+    }
+    @keyframes floatUp {
+      0% {
+        transform: translateY(100vh) translateX(0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-120vh) translateX(15px) rotate(15deg);
+        opacity: 0;
+      }
+    }
+    .star {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      opacity: 0.8;
+      animation: twinkle 3s infinite alternate;
+    }
+    @keyframes twinkle {
+      0% { opacity: 0.3; }
+      100% { opacity: 0.8; }
+    }
+
+    #info-box {
+      width: 480px;
+      max-width: 95vw;
+      background: rgba(255 255 255 / 0.1);
+      padding: 14px 20px;
+      border-radius: 15px;
+      margin-bottom: 15px;
+      text-align: center;
+      font-size: 1.1rem;
+      color: #ffcf33;
+      box-shadow: 0 0 20px 6px rgba(255 207 51, 0.3);
+      user-select: none;
+      z-index: 10;
+      backdrop-filter: blur(4px);
+    }
+
+    #game-container {
+      position: relative;
+      max-width: 480px;
+      width: 100%;
+      padding: 10px;
+      background: rgba(255 255 255 / 0.05);
+      border-radius: 15px;
+      box-shadow: 0 0 40px 10px rgba(255 255 255 / 0.07);
+      z-index: 10;
+      user-select: none;
+    }
+
+    #game-board {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+    }
+
+    .card {
+      perspective: 900px;
+      cursor: pointer;
+    }
+    .card-inner {
+      position: relative;
+      width: 100%;
+      padding-top: 125%;
+      transform-style: preserve-3d;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgb(0 0 0 / 0.4);
+      background: #111;
+    }
+    .card.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-front, .card-back {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      border-radius: 12px;
+      backface-visibility: hidden;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card-front {
+      background: #222;
+      font-size: 2.8rem;
+      user-select: none;
+      pointer-events: none;
+      color: #ffcf33;
+    }
+    .card-back {
+      background: #222;
+      transform: rotateY(180deg);
+    }
+    .card-back img {
+      max-width: 85%;
+      max-height: 85%;
+      border-radius: 10px;
+      user-select: none;
+      pointer-events: none;
+      filter: drop-shadow(0 0 6px #ffcf33);
+    }
+
+    #prank-message {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) scale(0);
+      background: rgba(255 223 51 / 0.95);
+      color: #4a2c00;
+      font-weight: 700;
+      font-size: 2rem;
+      padding: 15px 30px;
+      border-radius: 25px;
+      box-shadow: 0 0 12px #ffcf33;
+      z-index: 100;
+      pointer-events: none;
+      transition: transform 0.4s ease;
+      user-select: none;
+      text-align: center;
+      white-space: nowrap;
+    }
+    #prank-message.show {
+      transform: translateX(-50%) scale(1);
+    }
+
+    #win-message {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: rgba(255 255 255 / 0.1);
+      border: 3px solid #ffcf33;
+      padding: 30px 40px;
+      border-radius: 20px;
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: #ffcf33;
+      text-align: center;
+      z-index: 50;
+      backdrop-filter: blur(8px);
+      transition: transform 0.5s ease;
+      user-select: none;
+    }
+    #win-message.show {
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    /* Butterfly flying fixed vertical 15% */
+    #butterfly {
+      position: fixed;
+      width: 80px;
+      height: 80px;
+      top: 15%;
+      left: -100px;
+      z-index: 25;
+      user-select: none;
+      pointer-events: none;
+      filter: drop-shadow(0 0 8px #ffcf33);
+    }
+    #butterfly svg path.wing {
+      animation: flapWings 1.8s ease-in-out infinite;
+      transform-origin: center;
+      transform-box: fill-box;
+    }
+    @keyframes flapWings {
+      0%, 100% { transform: rotate(0deg);}
+      50% { transform: rotate(10deg);}
+    }
+
+    /* Hummingbird flying fixed vertical 75% */
+    #hummingbird {
+      position: fixed;
+      width: 50px;
+      height: 50px;
+      top: 75%;
+      left: 110vw;
+      z-index: 25;
+      user-select: none;
+      pointer-events: none;
+      filter: drop-shadow(0 0 6px #ffcf33);
+    }
+    #hummingbird svg path.wing {
+      animation: flapWingsSmall 1.3s ease-in-out infinite;
+      transform-origin: center;
+      transform-box: fill-box;
+    }
+    @keyframes flapWingsSmall {
+      0%, 100% { transform: rotate(0deg);}
+      50% { transform: rotate(15deg);}
+    }
+
+    @media (max-width: 520px) {
+      #info-box {
+        width: 95vw;
+        font-size: 1rem;
+        padding: 12px 16px;
+      }
+      #game-container {
+        max-width: 95vw;
+        margin: 0 auto;
+        padding: 8px;
+      }
+      #game-board {
+        gap: 12px;
+      }
+      #butterfly {
+        width: 60px;
+        height: 60px;
+      }
+      #hummingbird {
+        width: 40px;
+        height: 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="background"></div>
+  <div id="stars"></div>
+
+  <div id="butterfly" aria-hidden="true">
+    <svg width="80" height="80" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" >
+      <path class="wing" d="M12 32 C5 20, 20 10, 28 28" stroke="#ffcf33" stroke-width="2" fill="#ffd93b" />
+      <path class="wing" d="M52 32 C59 20, 44 10, 36 28" stroke="#ffcf33" stroke-width="2" fill="#ffd93b" />
+      <circle cx="32" cy="32" r="4" fill="#c82333"/>
+      <line x1="32" y1="36" x2="32" y2="54" stroke="#c82333" stroke-width="2" />
+    </svg>
+  </div>
+
+  <div id="hummingbird" aria-hidden="true">
+    <svg width="50" height="50" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" >
+      <path class="wing" d="M30 10 C10 30, 30 50, 40 30" stroke="#ffcf33" stroke-width="2" fill="#6bc1ff" />
+      <circle cx="38" cy="28" r="5" fill="#004d7a"/>
+      <line x1="38" y1="33" x2="38" y2="48" stroke="#004d7a" stroke-width="2" />
+    </svg>
+  </div>
+
+  <div id="info-box" role="region" aria-label="Game instructions">
+    🎉 Welcome to the Matching Game! Click cards to find pairs.<br>
+     Have fun! 🎈
+  </div>
+
+  <div id="game-container" aria-label="Birthday Matching Game">
+    <div id="game-board" role="grid" aria-live="polite" aria-atomic="true"></div>
+  </div>
+
+  <div id="prank-message" role="alert" aria-live="assertive" aria-atomic="true"></div>
+  <div id="win-message" role="alert" aria-live="assertive" aria-atomic="true">Yayy You Win! 🎉</div>
+
+  <!-- Audio placeholders -->
+  <audio id="sound-flip" src="flip.mp3" preload="auto"></audio>
+  <audio id="sound-pop1" src="pop1.mp3" preload="auto"></audio>
+  <audio id="sound-pop2" src="pop2.mp3" preload="auto"></audio>
+  <audio id="sound-pop3" src="pop3.mp3" preload="auto"></audio>
+  <audio id="sound-win" src="win.mp3" preload="auto"></audio>
+  <audio id="background-music" src="background.mp3" preload="auto" loop playsinline></audio>
+
+<script>
+  const images = [];
+  for(let i=1; i<=8; i++) {
+    images.push(`page${i}.jpg`);
+  }
+  let cardsArray = [...images, ...images];
+  cardsArray.sort(() => 0.5 - Math.random());
+
+  const gameBoard = document.getElementById('game-board');
+  let flippedCards = [];
+  let matchedCount = 0;
+
+  function createCard(imgSrc, index) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-label', 'Card');
+    card.dataset.img = imgSrc;
+    card.innerHTML = `
+      <div class="card-inner">
+        <div class="card-front">?</div>
+        <div class="card-back"><img src="${imgSrc}" alt="Card image"></div>
+      </div>
+    `;
+
+    function flipCard() {
+      if (card.classList.contains('flipped') || flippedCards.length === 2) return;
+      document.getElementById('sound-flip').currentTime = 0;
+      document.getElementById('sound-flip').play();
+      card.classList.add('flipped');
+      flippedCards.push(card);
+      if (flippedCards.length === 2) {
+        checkMatch();
+      }
+    }
+
+    card.addEventListener('click', flipCard);
+    card.addEventListener('keydown', e => {
+      if(e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        flipCard();
+      }
+    });
+    return card;
+  }
+
+  function checkMatch() {
+    if(flippedCards[0].dataset.img === flippedCards[1].dataset.img) {
+      matchedCount++;
+      flippedCards = [];
+      if(matchedCount === images.length) {
+        document.getElementById('sound-win').play();
+        showWin();
+      }
+    } else {
+      setTimeout(() => {
+        flippedCards.forEach(c => c.classList.remove('flipped'));
+        flippedCards = [];
+      }, 1000);
+    }
+  }
+
+  function showWin() {
+    const winMsg = document.getElementById('win-message');
+    winMsg.classList.add('show');
+    setTimeout(() => {
+      window.location.href = 'index3.html';
+    }, 3000);
+  }
+
+  // Create all cards and append
+  cardsArray.forEach((img, idx) => {
+    const card = createCard(img, idx);
+    gameBoard.appendChild(card);
+  });
+
+  // Balloons
+  function createBalloons() {
+    const bg = document.getElementById('background');
+    for(let i=0; i<12; i++) {
+      const balloon = document.createElement('div');
+      balloon.className = 'balloon';
+      balloon.style.left = Math.random()*100 + 'vw';
+      balloon.style.animationDuration = (10 + Math.random()*12) + 's';
+      balloon.style.animationDelay = (Math.random()*-20) + 's';
+      balloon.style.opacity = 0.3 + Math.random()*0.6;
+      bg.appendChild(balloon);
+    }
+  }
+
+  // Stars
+  function createStars() {
+    const stars = document.getElementById('stars');
+    for(let i=0; i<50; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      const size = 0.5 + Math.random()*1.8;
+      star.style.width = size + 'px';
+      star.style.height = size + 'px';
+      star.style.top = Math.random()*100 + 'vh';
+      star.style.left = Math.random()*100 + 'vw';
+      star.style.animationDuration = 1 + Math.random()*3 + 's';
+      star.style.animationDelay = Math.random()*3 + 's';
+      stars.appendChild(star);
+    }
+  }
+
+  // Animate flying for butterfly and hummingbird with gentle oscillation
+  function animateFlying(el, fromX, toX, duration, baseTopPercent, callback) {
+    el.style.top = baseTopPercent + '%';
+    let start = null;
+
+    const maxOffsetX = 12;
+    const maxOffsetY = 10;
+
+    function step(timestamp) {
+      if (!start) start = timestamp;
+      let progress = timestamp - start;
+      let pct = Math.min(progress / duration, 1);
+
+      let x = fromX + (toX - fromX) * pct;
+
+      let timeFactor = timestamp / 500;
+
+      if (el._phaseX === undefined) el._phaseX = Math.random() * Math.PI * 2;
+      if (el._phaseY === undefined) el._phaseY = Math.random() * Math.PI * 2;
+
+      let offsetX = Math.sin(timeFactor + el._phaseX) * maxOffsetX * 0.4;
+      let offsetY = Math.cos(timeFactor + el._phaseY) * maxOffsetY * 0.5;
+
+      el.style.left = (x + offsetX) + 'vw';
+      el.style.top = (baseTopPercent + offsetY) + '%';
+
+      if (pct < 1) {
+        requestAnimationFrame(step);
+      } else {
+        el.style.left = fromX + 'vw';
+        el.style.top = baseTopPercent + '%';
+        if (callback) callback();
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  function loopFly() {
+    animateFlying(document.getElementById('butterfly'), -12, 110, 15000, 15, loopFly);
+    animateFlying(document.getElementById('hummingbird'), 110, -12, 13000, 75, loopFly);
+  }
+
+  // Prank messages and sounds
+  const prankMessages = [
+    "Motiii hahaha!",
+    "Love you sooo much!!",
+    "Nahi thai tamara se!",
+    "Too slow? 🤭"
+  ];
+  let prankIndex = 0;
+
+  function loopPrankMessages() {
+    const msgEl = document.getElementById('prank-message');
+    const msg = prankMessages[prankIndex % prankMessages.length];
+    prankIndex++;
+    msgEl.textContent = msg;
+    msgEl.classList.add('show');
+
+    const popSound = document.getElementById(`sound-pop${(prankIndex % 3) + 1}`);
+    popSound.currentTime = 0;
+    popSound.play();
+
+    setTimeout(() => {
+      msgEl.classList.remove('show');
+    }, 2500);
+
+    setTimeout(loopPrankMessages, 7000);
+  }
+
+  createBalloons();
+  createStars();
+  loopFly();
+
+  // Background music play with autoplay fix and fallback
+  const bgMusic = document.getElementById('background-music');
+  bgMusic.volume = 0.4;
+  bgMusic.muted = true; // start muted for autoplay
+
+  function tryPlayMusic() {
+    bgMusic.play().then(() => {
+      setTimeout(() => {
+        bgMusic.muted = false;
+      }, 200);
+    }).catch(() => {
+      console.log('Autoplay blocked, waiting for user interaction');
+    });
+  }
+
+  tryPlayMusic();
+
+  // Fallback: user interaction to start music if autoplay blocked
+  function onUserInteraction() {
+    if (bgMusic.paused) {
+      bgMusic.play();
+      bgMusic.muted = false;
+    }
+    window.removeEventListener('click', onUserInteraction);
+    window.removeEventListener('keydown', onUserInteraction);
+  }
+  window.addEventListener('click', onUserInteraction);
+  window.addEventListener('keydown', onUserInteraction);
+
+  setTimeout(loopPrankMessages, 4000);
+
+</script>
+</body>
+</html>
