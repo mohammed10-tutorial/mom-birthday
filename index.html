@@ -140,7 +140,7 @@
   </style>
 </head>
 <body>
-
+<audio id="background-music" src="background.mp3" preload="auto" loop playsinline></audio>
   <div id="countdown" aria-live="polite" aria-atomic="true" role="timer" aria-label="Countdown to mom's birthday">
     <div class="time-segment" aria-label="Days">
       <div class="digits">
@@ -605,8 +605,37 @@
   });
 
 })();
+  const bgMusic = document.getElementById('background-music');
+bgMusic.volume = 0.4;
+bgMusic.muted = true; // start muted for autoplay
+
+function tryPlayMusic() {
+  bgMusic.play().then(() => {
+    setTimeout(() => {
+      bgMusic.muted = false;
+    }, 200);
+  }).catch(() => {
+    console.log('Autoplay blocked, waiting for user interaction');
+  });
+}
+
+tryPlayMusic();
+
+function onUserInteraction() {
+  if (bgMusic.paused) {
+    bgMusic.play();
+    bgMusic.muted = false;
+  }
+  window.removeEventListener('click', onUserInteraction);
+  window.removeEventListener('keydown', onUserInteraction);
+}
+
+window.addEventListener('click', onUserInteraction);
+window.addEventListener('keydown', onUserInteraction);
+
 </script>
 
 </body>
 </html>
+
 
