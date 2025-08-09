@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 <title>Birthday Stage 3 - Elegant Dark Theme Lanterns</title>
 
 <!-- Google Fonts -->
@@ -55,7 +55,7 @@
   .lantern {
     position: absolute;
     bottom: 0;
-    border-radius: 13px 13px 5px 5px;
+    border-radius: 18px 18px 10px 10px;
     box-shadow:
       0 0 8px 3px rgba(255, 230, 180, 0.3); /* minimal soft golden glow */
     cursor: default;
@@ -98,7 +98,7 @@
   }
   #photoContainer h2 {
     margin-top: 18px;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 3rem;
     color: #f9ca24; /* golden text */
     text-shadow: 0 0 12px #f39c12;
@@ -108,20 +108,6 @@
     font-size: 1.4rem;
     color: #d1c4a1;
     font-style: italic;
-  }
-
-  /* --- Responsive Lantern Sizes --- */
-  @media (max-width: 600px) {
-    .lantern {
-      width: 18vw !important;
-      height: 27vw !important;
-    }
-  }
-  @media (min-width: 601px) {
-    .lantern {
-      width: 44px !important;
-      height: 66px !important;
-    }
   }
 
   /* --- Question and Reply Boxes (Dark Professional) --- */
@@ -141,6 +127,8 @@
     z-index: 30;
     display: none;
     font-family: 'Poppins', sans-serif;
+    max-width: 90vw;
+    word-wrap: break-word;
   }
 
   #questionBox button, #replyBox button {
@@ -167,17 +155,64 @@
     top: 16px; left: 50%;
     transform: translateX(-50%);
     background: linear-gradient(45deg, #2c3e50, #34495e);
-    padding: 14px 28px;
-    border-radius: 32px;
+    padding: 16px 32px;
+    border-radius: 36px;
     font-family: 'Merriweather', serif;
     font-size: 2.4rem;
-    font-weight: 800;
+    font-weight: 900;
     color: #ecf0f1;
     box-shadow: 0 0 30px 10px rgba(44, 62, 80, 0.8);
     z-index: 50;
     user-select: none;
     letter-spacing: 3px;
     text-shadow: 0 0 8px #2c3e50;
+  }
+
+  /* --- Responsive Lantern Sizes & Boxes --- */
+  @media (max-width: 900px) {
+    .lantern {
+      width: 30px !important;
+      height: 45px !important;
+    }
+    #questionBox, #replyBox {
+      padding: 20px 28px;
+      font-size: 1.4rem;
+      max-width: 85vw;
+    }
+    #questionBox button, #replyBox button {
+      font-size: 1.2rem;
+      padding: 10px 24px;
+      margin: 12px 12px 0 12px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .lantern {
+      width: 24px !important;
+      height: 36px !important;
+    }
+    #photoContainer img {
+      max-width: 260px;
+      max-height: 260px;
+    }
+    #photoContainer h2 {
+      font-size: 2.2rem;
+      margin-top: 12px;
+    }
+    #photoContainer p {
+      font-size: 1.1rem;
+      margin-top: 6px;
+    }
+    #questionBox, #replyBox {
+      padding: 18px 20px;
+      font-size: 1.1rem;
+      max-width: 90vw;
+    }
+    #questionBox button, #replyBox button {
+      font-size: 1rem;
+      padding: 8px 20px;
+      margin: 10px 10px 0 10px;
+    }
   }
 </style>
 </head>
@@ -381,7 +416,10 @@
       lan.el.style.bottom = `${lan.yPx}px`;
       lan.el.style.left = `${window.innerWidth * (lan.xPercent / 100)}px`;
 
-      if (!lan.popTimeout && lan.yPx >= window.innerHeight * 0.85) {
+      // Adjust popping threshold for mobile devices to fix non-popping
+      const popThreshold = window.innerHeight * 0.82;
+
+      if (!lan.popTimeout && lan.yPx >= popThreshold) {
         lan.popTimeout = setTimeout(() => popLantern(lan), 400);
       }
     });
@@ -454,4 +492,3 @@
 
 </body>
 </html>
-
