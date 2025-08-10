@@ -60,16 +60,14 @@
     height: 100%;
     pointer-events: none;
     z-index: 15;
-    overflow: visible; /* make sure lanterns not clipped */
+    overflow: visible; /* no clipping */
   }
 
   /* --- Lanterns --- */
   .lantern {
     position: absolute;
-    bottom: 0;
     border-radius: 18px 18px 10px 10px;
-    box-shadow:
-      0 0 8px 3px rgba(255, 230, 180, 0.3);
+    box-shadow: 0 0 8px 3px rgba(255, 230, 180, 0.3);
     cursor: default;
     transition: background 0.5s ease;
     will-change: transform;
@@ -118,7 +116,7 @@
     margin-top: 18px;
     font-weight: 700;
     font-size: 3rem;
-    color: #f9ca24; /* golden text */
+    color: #f9ca24;
     text-shadow: 0 0 12px #f39c12;
   }
   #photoContainer p {
@@ -142,9 +140,9 @@
     }
   }
 
-  /* --- Question and Reply Boxes (Dark Professional) --- */
+  /* --- Question Box --- */
   #questionBox {
-    max-width: 420px;  /* wider to fit buttons on one line */
+    max-width: 440px;  /* wider for buttons */
     padding: 22px 32px;
     font-size: 1.5rem;
     display: none;
@@ -163,7 +161,7 @@
   }
 
   #questionBox button {
-    margin: 18px 14px 0 14px; /* reduce margin for side-by-side */
+    margin: 18px 14px 0 14px;
     padding: 12px 28px;
     font-size: 1.25rem;
     border-radius: 16px;
@@ -179,18 +177,19 @@
     color: #fff;
   }
 
+  /* --- Reply Box --- */
   #replyBox {
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(40, 44, 52, 0.95); /* dark slate */
+    background: rgba(40, 44, 52, 0.95);
     padding: 30px 42px;
     border-radius: 24px;
     box-shadow: 0 0 35px 10px rgba(80, 84, 95, 0.8);
     text-align: center;
     font-size: 1.9rem;
     font-weight: 600;
-    color: #b0bec5; /* muted light blue-gray */
+    color: #b0bec5;
     user-select: none;
     z-index: 30;
     display: none;
@@ -198,9 +197,9 @@
   }
 
   #replyBox button {
-    background: #2e3a47; /* dark steel blue */
+    background: #2e3a47;
     border: none;
-    color: #d1d9e6; /* soft light */
+    color: #d1d9e6;
     font-weight: 700;
     font-size: 1.5rem;
     padding: 14px 32px;
@@ -211,11 +210,11 @@
     font-family: 'Poppins', sans-serif;
   }
   #replyBox button:hover {
-    background: #3e5064; /* lighter steel */
+    background: #3e5064;
     color: #fff;
   }
 
-  /* --- Happy Birthday Banner --- */
+  /* --- Happy Birthday Banner (untouched) --- */
   #banner {
     position: fixed;
     top: 16px; left: 50%;
@@ -232,7 +231,7 @@
     user-select: none;
     letter-spacing: 3px;
     text-shadow: 0 0 8px #2c3e50;
-    white-space: nowrap; /* Keep text in one line */
+    white-space: nowrap;
   }
 </style>
 </head>
@@ -291,7 +290,7 @@
     starsContainer.appendChild(star);
   }
 
-  // Play background music after first user interaction
+  // Background music play on first user click
   const backgroundSound = document.getElementById('backgroundSound');
   backgroundSound.volume = 0.35;
 
@@ -310,7 +309,7 @@
   const noBtn = document.getElementById('noBtn');
   const replyCloseBtn = document.getElementById('replyCloseBtn');
 
-  // Sound elements
+  // Sounds
   const popSound = document.getElementById('popSound');
   const sparkleSound = document.getElementById('sparkleSound');
   const photoAppearSound = document.getElementById('photoAppearSound');
@@ -324,7 +323,7 @@
     return Math.random() * (max - min) + min;
   }
 
-  // Elegant minimal lantern colors gradients
+  // Lantern colors gradients
   const lanternColors = [
     'linear-gradient(180deg, #5d6d7e, #34495e)', // slate blue
     'linear-gradient(180deg, #7e8ca0, #2c3e50)', // steel blue
@@ -360,8 +359,8 @@
     lanterns.push({
       el: lan,
       xPercent,
-      yPx: 0, // start at bottom visible
-      speed: randomRange(3500, 6000), // speed in ms
+      yPx: window.innerHeight + height,  // START underground (below bottom)
+      speed: randomRange(3500, 6000), 
       popped: false,
       popTimeout: null,
       startTime: null,
@@ -400,7 +399,7 @@
     lan.el.style.opacity = '0';
     setTimeout(() => lan.el.remove(), 500);
 
-    // Check if all lanterns popped
+    // If all popped, show question box after delay
     if (lanterns.every(l => l.popped)) {
       setTimeout(() => {
         photoContainer.style.opacity = '0';
@@ -422,14 +421,8 @@
         if (timestamp - lan.delayStart >= lan.delay) {
           lan.started = true;
           lan.startTime = timestamp;
-
-          // Safety pop after 10s if something wrong
-          lan.forcedPopTimeout = setTimeout(() => {
-            popLantern(lan);
-          }, 10000);
         } else {
-          // keep lantern at bottom visible
-          lan.el.style.transform = `translateY(0)`;
+          lan.el.style.bottom = `-${lan.height}px`;
           return;
         }
       }
@@ -438,16 +431,13 @@
       let progress = elapsed / lan.speed;
       if (progress > 1) progress = 1;
 
-      // Move lantern upward from bottom (translateY = 0) to near top (~ -85% viewport height)
-      const maxTranslateY = - (window.innerHeight * 0.85 + lan.height); // negative value upwards
-      const currentY = progress * maxTranslateY;
-      lan.el.style.transform = `translateY(${currentY}px)`;
+      // Move lantern from underground (yPx) to near top (visible top ~ 15% of window height)
+      lan.yPx = window.innerHeight + lan.height - progress * (window.innerHeight * 1.15 + lan.height);
+      lan.el.style.bottom = `${Math.max(0, lan.yPx)}px`;
+      lan.el.style.left = `${window.innerWidth * (lan.xPercent / 100)}px`;
 
-      if (!lan.popTimeout && progress >= 1) {
-        lan.popTimeout = setTimeout(() => {
-          popLantern(lan);
-          if (lan.forcedPopTimeout) clearTimeout(lan.forcedPopTimeout);
-        }, 400);
+      if (!lan.popTimeout && lan.yPx <= window.innerHeight * 0.15) {
+        lan.popTimeout = setTimeout(() => popLantern(lan), 400);
       }
     });
 
@@ -456,32 +446,29 @@
 
   requestAnimationFrame(animate);
 
-  // Show photo after 7 seconds independent of lanterns
+  // Show photo after 7 seconds independently
   setTimeout(() => {
     photoAppearSound.currentTime = 0;
     photoAppearSound.play();
     photoContainer.style.opacity = '1';
   }, 7000);
 
-  // Detect mobile devices
-  function isMobile() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  }
-
   // Button interactions
   yesBtn.addEventListener('mouseenter', () => {
     buttonHoverSound.currentTime = 0;
     buttonHoverSound.play();
   });
+
   noBtn.addEventListener('mouseenter', () => {
     buttonHoverSound.currentTime = 0;
     buttonHoverSound.play();
   });
+
   yesBtn.addEventListener('click', (e) => {
     buttonClickSound.currentTime = 0;
     buttonClickSound.play();
 
-    // Teleport button randomly on hover/click
+    // Teleport button randomly on click
     const maxX = questionBox.clientWidth - yesBtn.clientWidth - 20;
     const maxY = questionBox.clientHeight - yesBtn.clientHeight - 20;
 
@@ -509,7 +496,7 @@
     buttonClickSound.play();
     replyBox.style.display = 'none';
   });
-
 </script>
+
 </body>
 </html>
