@@ -52,6 +52,15 @@
   }
 
   /* --- Lanterns --- */
+  #lanternsContainer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 15;
+  }
   .lantern {
     position: absolute;
     bottom: 0;
@@ -61,6 +70,9 @@
     cursor: default;
     transition: background 0.5s ease;
     will-change: transform;
+    /* fixed size so consistent */
+    width: 40px;
+    height: 60px;
   }
 
   /* --- Sparkle --- */
@@ -90,59 +102,46 @@
     transition: opacity 1.5s ease;
     z-index: 20;
     font-family: 'Merriweather', serif;
+    max-width: 90vw;
   }
   #photoContainer img {
-    max-width: 340px;
-    max-height: 340px;
+    max-width: 300px;
+    max-height: 300px;
     border-radius: 28px;
     box-shadow: 0 0 40px 10px rgba(255, 230, 180, 0.6);
   }
   #photoContainer h2 {
-    margin-top: 18px;
+    margin-top: 14px;
     font-weight: 700;
-    font-size: 3rem;
+    font-size: 2.4rem;
     color: #f9ca24;
     text-shadow: 0 0 12px #f39c12;
   }
   #photoContainer p {
-    margin-top: 8px;
-    font-size: 1.4rem;
+    margin-top: 6px;
+    font-size: 1.1rem;
     color: #d1c4a1;
     font-style: italic;
   }
 
-  /* --- Responsive Lantern Sizes --- */
-  @media (max-width: 600px) {
-    .lantern {
-      width: 40px !important;
-      height: 60px !important;
-    }
-  }
-  @media (min-width: 601px) {
-    .lantern {
-      width: 44px !important;
-      height: 66px !important;
-    }
-  }
-
-  /* --- Question and Reply Boxes (Dark Professional) --- */
+  /* --- Question and Reply Boxes --- */
   #questionBox, #replyBox {
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
     background: rgba(40, 44, 52, 0.95);
-    padding: 30px 42px;
-    border-radius: 24px;
-    box-shadow: 0 0 35px 10px rgba(80, 84, 95, 0.8);
+    padding: 22px 34px;
+    border-radius: 22px;
+    box-shadow: 0 0 25px 7px rgba(80, 84, 95, 0.7);
     text-align: center;
-    font-size: 1.9rem;
+    font-size: 1.5rem;
     font-weight: 600;
     color: #b0bec5;
     user-select: none;
     z-index: 30;
     display: none;
     font-family: 'Poppins', sans-serif;
-    max-width: 480px;
+    max-width: 360px;
   }
 
   #questionBox button, #replyBox button {
@@ -150,12 +149,12 @@
     border: none;
     color: #d1d9e6;
     font-weight: 700;
-    font-size: 1.5rem;
-    padding: 14px 32px;
-    margin: 20px 16px 0 16px;
-    border-radius: 18px;
+    font-size: 1.25rem;
+    padding: 12px 28px;
+    margin: 18px 12px 0 12px;
+    border-radius: 16px;
     cursor: pointer;
-    transition: background-color 0.35s ease;
+    transition: background-color 0.3s ease;
     font-family: 'Poppins', sans-serif;
   }
   #questionBox button:hover, #replyBox button:hover {
@@ -169,18 +168,20 @@
     top: 16px; left: 50%;
     transform: translateX(-50%);
     background: linear-gradient(45deg, #2c3e50, #34495e);
-    padding: 16px 32px;
+    padding: 12px 30px;
     border-radius: 36px;
     font-family: 'Merriweather', serif;
-    font-size: 2.4rem;
+    font-size: 2rem;
     font-weight: 900;
     color: #ecf0f1;
-    box-shadow: 0 0 30px 10px rgba(44, 62, 80, 0.8);
+    box-shadow: 0 0 25px 8px rgba(44, 62, 80, 0.8);
     z-index: 50;
     user-select: none;
-    letter-spacing: 3px;
-    text-shadow: 0 0 8px #2c3e50;
-    max-width: 95vw;
+    letter-spacing: 2px;
+    white-space: nowrap;
+    max-width: 98vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
     text-align: center;
   }
 </style>
@@ -189,7 +190,7 @@
 
 <div id="stars"></div>
 
-<div id="banner">Happy Birthday Ammi</div>
+<div id="banner" title="Happy Birthday Ammi">Happy Birthday Ammi</div>
 
 <div id="container">
   <div id="lanternsContainer"></div>
@@ -292,12 +293,6 @@
     const xPercent = randomRange(5, 90);
     lan.style.left = `${xPercent}%`;
 
-    const width = randomRange(30, 50);
-    const height = width * 1.5;
-
-    lan.style.width = `${width}px`;
-    lan.style.height = `${height}px`;
-
     lan.style.background = lanternColors[Math.floor(Math.random() * lanternColors.length)];
 
     lanternsContainer.appendChild(lan);
@@ -307,12 +302,11 @@
     lanterns.push({
       el: lan,
       xPercent,
-      translateY: window.innerHeight + height,
+      translateY: window.innerHeight + 60, // fixed lantern height 60px
       speed: randomRange(3500, 6000),
       popped: false,
       popTimeout: null,
       startTime: null,
-      height,
       delay,
       started: false,
       forcedPopTimeout: null,
@@ -384,7 +378,7 @@
       let progress = elapsed / lan.speed;
       if (progress > 1) progress = 1;
 
-      const startY = window.innerHeight + lan.height;
+      const startY = window.innerHeight + 60; // fixed lantern height
       const endY = window.innerHeight * 0.15;
 
       const currentY = startY - (progress * (startY - endY));
